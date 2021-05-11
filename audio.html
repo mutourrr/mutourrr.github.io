@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta charset="utf-8" />
+    <style>
+      #progre {
+        margin-top: 20px;
+      }
+      button {
+        margin-top: 20px;
+      }
+      .yinliang {
+        position: absolute;
+        left: 400px;
+        top: 150px;
+        width: 40px;
+        height: 200px;
+        text-align: center;
+      }
+      .yinliang input {
+        transform-origin: left;
+        transform: rotate(-90deg);
+        text-align: center;
+        margin-top: 115px;
+        margin-left: 20px;
+      }
+      .yinliang span {
+        position: relative;
+        top: -15px;
+        font-size: 14px;
+      }
+      textarea {
+        position: absolute;
+        top: 10px;
+        left: 48px;
+      }
+      .song {
+        font-size: 14px;
+        color: #000;
+      }
+      .wrapper {
+        width: 500px;
+        height: 400px;
+        margin-top: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <audio id="myAudio" src="夏天的风 .m4a" onEnded="next1();"></audio>
+    <span class="song">音乐：</span>
+    <textarea id="text" rows="3" cols="16" readonly ondrop="drop(event)" ondragover="dragover(event);">
+    </textarea>
+    <br />
+    <div class="wrapper">
+        <!-- 增加mouseover  -->
+      <input
+        id="progre"
+        type="range"
+        value="0"
+        min="0"
+        onmouseover="clearSliderTimer()"
+        onchange="setStartTime()"
+        style="width: 200px;"
+      /><label id="time"></label><br />
+      <button id="start">播放</button>
+      <button id="round">循环播放</button>
+      <button class="pre" onclick="pre1()">上一首</button>
+      <button class="next" onclick="next1()">下一首</button>
+      <div class="yinliang">
+        <input
+          type="range"
+          onchange="setVoice(this)"
+          value="50"
+          max="100"
+          id="v"
+        />
+        <span>音量</span>
+      </div>
+    </div>
+
+    <script>
+      var myAudio = document.getElementById("myAudio");
+      var time = document.getElementById("time");
+      var progre = document.getElementById("progre");
+      var start = document.getElementById("start");
+      var round = document.getElementById("round");
+      var music = document.getElementById("music");
+      var text = document.getElementById("text");
+      var musics = new Array();
+      var current = 0;
+      text.value = "";
+
+      function dragover(e) {
+        e.preventDefault();
+      }
+
+      function drop(e) {
+        var len = musics.length;
+        e.preventDefault();
+        var fils = e.dataTransfer.files;
+        console.log(fils);
+        for (i = 0; i < fils.length; i++) {
+          len++;
+          if (len == 1) text.value += fils[i].name;
+          else text.value += "\n" + fils[i].name;
+          musics.push(fils[i].name);
+        }
+        myAudio.src = musics[0];
+      }
+      function next1() {
+        current++;
+        if (!myAudio.loop && current == musics.length) {
+          myAudio.pause();
+          return;
+        }
+        current = current % musics.length;
+        progre.value = 0;
+        myAudio.src = musics[current];
+        myAudio.load();
+        //      console.log(musics[current]);
+
+        myAudio.play();
+      }
+      function pre1() {
+        current--;
+        if (!myAudio.loop && current == musics.length) {
+          myAudio.pause();
+          return;
+        }
+        current = current % musics.length;
+        progre.value = 0;
+        myAudio.src = musics[current];
+        myAudio.load();
+        //      console.log(musics[current]);
+
+        myAudio.play();
+      }
+      start.onclick = function () {
+        if (myAudio.paused) {
+          myAudio.play();
+          start.innerHTML = "暂停";
+          setProgress();
+        } else {
+          myAudio.pause();
+          start.innerHTML = "播放";
+        }
+      };
+      round.onclick = function () {
+        if (myAudio.loop) {
+          myAudio.loop = false;
+          console.log(myAudio.loop);
+          round.innerHTML = "取消循环播放";
+        } else {
+          myAudio.loop = true;
+          round.innerHTML = "循环播放";
+        }
+      };
+
+      function clearSliderTimer() {
+        clearInterval(timer);
+        timer = null;
+      }
+      // 快进滑块
+      function setStartTime() {
+        // 将音频播放的时间与滑块的值进行绑定
+
+        console.log(parseInt((progre.value * myAudio.duration) / 100));
+        myAudio.currentTime = parseInt((progre.value * myAudio.duration) / 100);
+        console.log(parseInt((progre.value * myAudio.duration) / 100));
+        console.log(myAudio.currentTime);
+        time.innerHTML =
+          parseInt(myAudio.currentTime) + "/" + parseInt(myAudio.duration);
+        setProgress();//开启播放
+      }
+
+      //声明定时器，用来设置滑块的值跟随视频播放进度
+      var timer = null;
+      function setProgress() {
+        if (!timer) {
+          timer = setInterval(function () {
+            //注意：value理解成百分比
+            progre.value = parseInt(
+              (myAudio.currentTime / myAudio.duration).toFixed(2) * 100
+            );
+            time.innerHTML =
+              parseInt(myAudio.currentTime) + "/" + parseInt(myAudio.duration);
+            if (myAudio.ended) {
+              clearInterval(timer);
+              timer = null;
+            }
+          }, 1000);
+        }
+      }
+
+      function setVoice(r) {
+        myAudio.volume = r.value / 100;
+      }
+    </script>
+  </body>
+</html>
